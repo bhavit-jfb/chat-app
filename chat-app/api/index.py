@@ -5,7 +5,7 @@ import os
 
 app = Flask(__name__, template_folder="../templates", static_folder="../static")
 
-app.config["SQLALCHEMY_DATABASE_URI"] = "postgresql://postgres.vzxgwtehuvcsdqguerfo:IRzDBYSu4wZmG5Bn@aws-1-ap-south-1.pooler.supabase.com:6543/postgres"
+app.config["SQLALCHEMY_DATABASE_URI"] = os.environ.get("DATABASE_URL")
 app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
 
 db = SQLAlchemy(app)
