@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Dashboard</title>
+</head>
+<body>
+
+<h2>Dashboard</h2>
+
+<h3>Your Groups</h3>
+
+<h3>Your Groups</h3>
+
+{% for group in groups %}
+    <p>
+        <a href="/group/{{ group.id }}">{{ group.name }}</a>
+    </p>
+{% endfor %}
+
+<br>
+
+<h3>Create New Group</h3>
+<form method="POST" action="/create-group">
+    <input type="text" name="group_name" placeholder="Group Name" required>
+    <button type="submit">Create</button>
+</form>
+
+</body>
+</html>

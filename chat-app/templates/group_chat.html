@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Group Chat</title>
+</head>
+<body>
+
+<h2>Group Chat</h2>
+
+<div id="chat-box" style="border:1px solid black; height:300px; overflow:auto;">
+    <h2>{{ group.name }}</h2>
+</div>
+
+<br>
+
+<form id="message-form" enctype="multipart/form-data">
+    <input type="text" name="message" placeholder="Type message">
+    <input type="file" name="file">
+    <button type="submit">Send</button>
+</form>
+
+<script src="/static/js/chat.js"></script>
+
+</body>
+</html>
