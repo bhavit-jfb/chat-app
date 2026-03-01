@@ -95,5 +95,4 @@ def group_chat(group_id):
     group = Group.query.get(group_id)
     return render_template("group_chat.html", group=group)
 
-if __name__ == "__main__":
-    app.run(debug=True)
+app = app
