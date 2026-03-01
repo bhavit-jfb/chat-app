@@ -17,8 +17,6 @@ class User(db.Model):
     email = db.Column(db.String(120), unique=True, nullable=False)
     password = db.Column(db.String(200), nullable=False)
 
-with app.app_context():
-    db.create_all()
 
 class Group(db.Model):
     __tablename__ = "groups"
@@ -97,3 +95,5 @@ def group_chat(group_id):
 
 if __name__ == "__main__":
     app.run(debug=True)
+
+app = app
