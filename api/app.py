@@ -103,35 +103,93 @@ def dashboard():
     return render_template("dashboard.html", groups=groups)
 
 @app.route("/create-group", methods=["POST"])
+@jwt_required()
 def create_group():
+    current_user_id = get_jwt_identity()
     group_name = request.form.get("group_name")
-    new_group = Group(id=str(uuid.uuid4()), name=group_name)
+
+    # Create the group
+    new_group = Group(
+        id=str(uuid.uuid4()),
+        name=group_name,
+        created_by=current_user_id
+    )
     db.session.add(new_group)
     db.session.commit()
+
+    # Add the creator as a member
+    new_member = GroupMember(
+        id=str(uuid.uuid4()),
+        user_id=current_user_id,
+        group_id=new_group.id
+    )
+    db.session.add(new_member)
+    db.session.commit()
+
     return redirect("/dashboard")
 
 @app.route("/send-message", methods=["POST"])
+@jwt_required()
 def send_message():
-    message = request.form.get("message")
+    current_user_id = get_jwt_identity()
+    group_id = request.form.get("group_id")
+    content = request.form.get("message")
     file = request.files.get("file")
-    print("Message:", message)
+
+    # Check if user is in group
+    membership = GroupMember.query.filter_by(user_id=current_user_id, group_id=group_id).first()
+    if not membership:
+        return jsonify({"status": "Access denied"}), 403
+
+    file_url = None
     if file:
-        print("File name:", file.filename)
-    return jsonify({"status": "Message received"})
+        filename = str(uuid.uuid4()) + "_" + file.filename
+        filepath = os.path.join("static/uploads", filename)
+        file.save(filepath)
+        file_url = filepath
+
+    new_message = Message(
+        id=str(uuid.uuid4()),
+        group_id=group_id,
+        user_id=current_user_id,
+        content=content,
+        file_url=file_url
+    )
+
+    db.session.add(new_message)
+    db.session.commit()
+    return jsonify({"status": "Message received", "message": content})
 
 @app.route("/group/<group_id>")
+@jwt_required()
 def group_chat(group_id):
+    current_user_id = get_jwt_identity()
+
+    # Optional: check if user is member of this group
+    membership = GroupMember.query.filter_by(user_id=current_user_id, group_id=group_id).first()
+    if not membership:
+        return "Access denied to this group", 403
+
     group = Group.query.get(group_id)
-    return render_template("group_chat.html", group=group)
+    messages = Message.query.filter_by(group_id=group_id).order_by(Message.timestamp).all()
+    return render_template("group_chat.html", group=group, messages=messages)
 
 @app.route("/create-message", methods=["POST"])
 @jwt_required()
 def create_message():
     current_user_id = get_jwt_identity()
+
     content = request.form.get("content")
-    new_message = Message(id=str(uuid.uuid4()), content=content, user_id=current_user_id)
+
+    new_message = Message(
+        id=str(uuid.uuid4()),
+        content=content,
+        user_id=current_user_id
+    )
+
     db.session.add(new_message)
     db.session.commit()
+
     return redirect("/dashboard")
 
 @app.route("/logout")
