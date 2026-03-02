@@ -1,10 +1,7 @@
-from flask import Flask, render_template, request, redirect, url_for, jsonify
+from flask import Flask, render_template, request, redirect, url_for, jsonify, make_response
 from flask_sqlalchemy import SQLAlchemy
 import uuid
 from datetime import datetime
-from flask_jwt_extended import JWTManager
-from flask_jwt_extended import create_access_token
-from werkzeug.security import generate_password_hash
 from werkzeug.security import generate_password_hash, check_password_hash
 from flask_jwt_extended import (
     JWTManager,
@@ -14,16 +11,16 @@ from flask_jwt_extended import (
     set_access_cookies,
     unset_jwt_cookies
 )
-from flask import make_response
 import os
 
 app = Flask(__name__, template_folder="../templates", static_folder="../static")
 
+# ---------------- DATABASE CONFIG ----------------
 app.config["SQLALCHEMY_DATABASE_URI"] = os.environ.get("DATABASE_URL")
 app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
-
 db = SQLAlchemy(app)
 
+# ---------------- JWT CONFIG ----------------
 app.config["JWT_SECRET_KEY"] = os.environ.get("JWT_SECRET_KEY")
 app.config["JWT_TOKEN_LOCATION"] = ["cookies"]
 app.config["JWT_COOKIE_SECURE"] = True  # True in production with HTTPS
@@ -31,16 +28,15 @@ app.config["JWT_ACCESS_COOKIE_PATH"] = "/"
 app.config["JWT_COOKIE_CSRF_PROTECT"] = False
 jwt = JWTManager(app)
 
+# ---------------- MODELS ----------------
 class User(db.Model):
     __tablename__ = "users"
-
     id = db.Column(db.String, primary_key=True)
     email = db.Column(db.String(120), unique=True, nullable=False)
     password = db.Column(db.String(200), nullable=False)
 
 class Group(db.Model):
     __tablename__ = "groups"
-
     id = db.Column(db.String, primary_key=True, default=lambda: str(uuid.uuid4()))
     name = db.Column(db.String(120), nullable=False)
     created_by = db.Column(db.String, db.ForeignKey("users.id"))
@@ -48,7 +44,6 @@ class Group(db.Model):
 
 class GroupMember(db.Model):
     __tablename__ = "group_members"
-
     id = db.Column(db.String, primary_key=True, default=lambda: str(uuid.uuid4()))
     user_id = db.Column(db.String, db.ForeignKey("users.id"))
     group_id = db.Column(db.String, db.ForeignKey("groups.id"))
@@ -56,7 +51,6 @@ class GroupMember(db.Model):
 
 class Message(db.Model):
     __tablename__ = "messages"
-
     id = db.Column(db.String, primary_key=True, default=lambda: str(uuid.uuid4()))
     group_id = db.Column(db.String, db.ForeignKey("groups.id"))
     user_id = db.Column(db.String, db.ForeignKey("users.id"))
@@ -64,10 +58,11 @@ class Message(db.Model):
     file_url = db.Column(db.String, nullable=True)
     timestamp = db.Column(db.DateTime, default=datetime.utcnow)
 
-
+# ---------------- INIT DB ----------------
 with app.app_context():
     db.create_all()
 
+# ---------------- ROUTES ----------------
 @app.route("/")
 def home():
     return render_template("login.html")
@@ -78,19 +73,11 @@ def register():
         email = request.form.get("email")
         password = request.form.get("password")
         hashed_password = generate_password_hash(password)
-        new_user = User(
-            id=str(uuid.uuid4()),
-            email=email,
-            password=hashed_password
-        )
-
+        new_user = User(id=str(uuid.uuid4()), email=email, password=hashed_password)
         db.session.add(new_user)
         db.session.commit()
-
         return redirect("/")
-
     return render_template("register.html")
-
 
 @app.route("/login", methods=["POST"])
 def login():
@@ -98,13 +85,14 @@ def login():
     password = request.form.get("password")
 
     user = User.query.filter_by(email=email).first()
-
     if not user or not check_password_hash(user.password, password):
         return "Invalid credentials", 401
 
+    # Create access token
     access_token = create_access_token(identity=user.id)
 
     response = make_response(redirect("/dashboard"))
+    # Set token in cookie (JWT 4.x compatible)
     set_access_cookies(response, access_token)
 
     return response
@@ -117,27 +105,18 @@ def dashboard():
 @app.route("/create-group", methods=["POST"])
 def create_group():
     group_name = request.form.get("group_name")
-
-    new_group = Group(
-        id=str(uuid.uuid4()),
-        name=group_name
-    )
-
+    new_group = Group(id=str(uuid.uuid4()), name=group_name)
     db.session.add(new_group)
     db.session.commit()
-
     return redirect("/dashboard")
 
 @app.route("/send-message", methods=["POST"])
 def send_message():
     message = request.form.get("message")
     file = request.files.get("file")
-
     print("Message:", message)
-
     if file:
         print("File name:", file.filename)
-
     return jsonify({"status": "Message received"})
 
 @app.route("/group/<group_id>")
@@ -149,18 +128,10 @@ def group_chat(group_id):
 @jwt_required()
 def create_message():
     current_user_id = get_jwt_identity()
-
     content = request.form.get("content")
-
-    new_message = Message(
-        id=str(uuid.uuid4()),
-        content=content,
-        user_id=current_user_id
-    )
-
+    new_message = Message(id=str(uuid.uuid4()), content=content, user_id=current_user_id)
     db.session.add(new_message)
     db.session.commit()
-
     return redirect("/dashboard")
 
 @app.route("/logout")
@@ -169,4 +140,4 @@ def logout():
     unset_jwt_cookies(response)
     return response
 
-# ❌ REMOVE app.run() completely
+# ❌ Do NOT include app.run(), this is handled by Render
