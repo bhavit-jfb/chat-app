@@ -5,20 +5,53 @@
 </head>
 <body>
 
-<h2>Group Chat</h2>
+<h2>{{ group.name }}</h2>
 
-<div id="chat-box" style="border:1px solid black; height:300px; overflow:auto;">
-    <h2>{{ group.name }}</h2>
+<div id="chat-box" style="border:1px solid black; height:300px; overflow:auto; padding:5px;">
+    {% for msg in messages %}
+        <div><strong>{{ msg.user_id }}</strong>: {{ msg.content }}</div>
+    {% endfor %}
 </div>
 
 <br>
 
 <form id="message-form" enctype="multipart/form-data">
-    <input type="text" name="message" placeholder="Type message">
-    <input type="file" name="file">
+    <input type="hidden" name="group_id" value="{{ group.id }}">
+    <input type="text" name="message" placeholder="Type message" required>
+    <!-- <input type="file" name="file"> -->
     <button type="submit">Send</button>
 </form>
 
+<script>
+const form = document.getElementById("message-form");
+const chatBox = document.getElementById("chat-box");
+
+form.addEventListener("submit", async (e) => {
+    e.preventDefault();
+    const formData = new FormData(form);
+
+    try {
+        const res = await fetch("/send-message", {
+            method: "POST",
+            body: formData,
+            credentials: "include" // important to send JWT cookie
+        });
+
+        const data = await res.json();
+        if (data.status === "Message received") {
+            const msgDiv = document.createElement("div");
+            msgDiv.textContent = "You: " + data.message;
+            chatBox.appendChild(msgDiv);
+            chatBox.scrollTop = chatBox.scrollHeight;
+            form.reset();
+        } else {
+            alert(data.status);
+        }
+    } catch (err) {
+        console.error(err);
+    }
+});
+</script>
 <script src="/static/js/chat.js"></script>
 
 </body>
