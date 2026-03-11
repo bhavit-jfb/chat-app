@@ -11,9 +11,11 @@ from flask_jwt_extended import (
     set_access_cookies,
     unset_jwt_cookies
 )
+from flask_socketio import SocketIO, join_room, emit
 import os
 
 app = Flask(__name__, template_folder="../templates", static_folder="../static")
+socketio = SocketIO(app, cors_allowed_origins="*")
 
 # ---------------- DATABASE CONFIG ----------------
 app.config["SQLALCHEMY_DATABASE_URI"] = os.environ.get("DATABASE_URL")
@@ -172,7 +174,7 @@ def group_chat(group_id):
 
     group = Group.query.get(group_id)
     messages = Message.query.filter_by(group_id=group_id).order_by(Message.timestamp).all()
-    return render_template("group_chat.html", group=group, messages=messages)
+    return render_template("group_chat.html", group=group, messages=messages, current_user_id=current_user_id)
 
 @app.route("/create-message", methods=["POST"])
 @jwt_required()
@@ -191,6 +193,39 @@ def create_message():
     db.session.commit()
 
     return redirect("/dashboard")
+
+@socketio.on("join_group")
+def join_group(data):
+    group_id = data["group_id"]
+    join_room(group_id)
+
+
+@socketio.on("send_message")
+def handle_message(data):
+
+    group_id = data["group_id"]
+    message = data["message"]
+    user_id = data["user_id"]
+
+    new_message = Message(
+        id=str(uuid.uuid4()),
+        group_id=group_id,
+        user_id=user_id,
+        content=message
+    )
+
+    db.session.add(new_message)
+    db.session.commit()
+
+    emit(
+        "receive_message",
+        {
+            "user_id": user_id,
+            "message": message,
+            "group_id": group_id
+        },
+        room=group_id
+    )
 
 @app.route("/logout")
 def logout():
