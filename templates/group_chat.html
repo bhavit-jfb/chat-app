@@ -15,44 +15,63 @@
 
 <br>
 
-<form id="message-form" enctype="multipart/form-data">
-    <input type="hidden" name="group_id" value="{{ group.id }}">
-    <input type="text" name="message" placeholder="Type message" required>
-    <!-- <input type="file" name="file"> -->
+<form id="message-form">
+    <input type="hidden" id="group_id" value="{{ group.id }}">
+    <input type="text" id="message_input" placeholder="Type message" required>
     <button type="submit">Send</button>
 </form>
 
+<!-- Socket.IO -->
+<script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
+
 <script>
+
+const socket = io();
+
+const group_id = "{{ group.id }}";
+const user_id = "{{ current_user_id if current_user_id else '' }}";
+
 const form = document.getElementById("message-form");
 const chatBox = document.getElementById("chat-box");
+const messageInput = document.getElementById("message_input");
 
-form.addEventListener("submit", async (e) => {
-    e.preventDefault();
-    const formData = new FormData(form);
 
-    try {
-        const res = await fetch("/send-message", {
-            method: "POST",
-            body: formData,
-            credentials: "include" // important to send JWT cookie
-        });
-
-        const data = await res.json();
-        if (data.status === "Message received") {
-            const msgDiv = document.createElement("div");
-            msgDiv.textContent = "You: " + data.message;
-            chatBox.appendChild(msgDiv);
-            chatBox.scrollTop = chatBox.scrollHeight;
-            form.reset();
-        } else {
-            alert(data.status);
-        }
-    } catch (err) {
-        console.error(err);
-    }
+/* join the group room */
+socket.emit("join_group", {
+    group_id: group_id
 });
+
+
+/* send message */
+form.addEventListener("submit", function(e){
+    e.preventDefault();
+
+    const message = messageInput.value;
+
+    socket.emit("send_message", {
+        group_id: group_id,
+        message: message,
+        user_id: user_id
+    });
+
+    messageInput.value = "";
+});
+
+
+/* receive message instantly */
+socket.on("receive_message", function(data){
+
+    const msgDiv = document.createElement("div");
+
+    msgDiv.innerHTML = "<strong>" + data.user_id + "</strong>: " + data.message;
+
+    chatBox.appendChild(msgDiv);
+
+    chatBox.scrollTop = chatBox.scrollHeight;
+
+});
+
 </script>
-<script src="/static/js/chat.js"></script>
 
 </body>
 </html>
