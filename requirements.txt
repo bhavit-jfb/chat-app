@@ -4,3 +4,6 @@ psycopg2-binary==2.9.9
 gunicorn==21.2.0
 Flask-JWT-Extended>=4.4.4
 Werkzeug>=2.2
+Flask-SocketIO==5.3.6
+gevent==23.9.1
+gevent-websocket==0.10.1
