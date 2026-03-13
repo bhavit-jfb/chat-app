@@ -244,7 +244,8 @@ def handle_message(data):
         {
             "user": user.display_name,
             "message": message,
-            "group_id": group_id
+            "group_id": group_id,
+            "user_id": user.id
         },
         room=group_id
     )
