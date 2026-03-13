@@ -36,11 +36,13 @@ class User(db.Model):
     id = db.Column(db.String, primary_key=True)
     email = db.Column(db.String(120), unique=True, nullable=False)
     password = db.Column(db.String(200), nullable=False)
+    display_name = db.Column(db.String(120))
 
 class Group(db.Model):
     __tablename__ = "groups"
     id = db.Column(db.String, primary_key=True, default=lambda: str(uuid.uuid4()))
     name = db.Column(db.String(120), nullable=False)
+    passcode = db.Column(db.String(50), nullable=False)
     created_by = db.Column(db.String, db.ForeignKey("users.id"))
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
 
@@ -59,6 +61,8 @@ class Message(db.Model):
     content = db.Column(db.Text, nullable=True)
     file_url = db.Column(db.String, nullable=True)
     timestamp = db.Column(db.DateTime, default=datetime.utcnow)
+
+    user = db.relationship("User")
 
 # ---------------- INIT DB ----------------
 with app.app_context():
@@ -100,35 +104,51 @@ def login():
     return response
 
 @app.route("/dashboard")
+@jwt_required()
 def dashboard():
-    groups = Group.query.all()
-    return render_template("dashboard.html", groups=groups)
+
+    search = request.args.get("search")
+
+    groups = []
+
+    if search:
+        groups = Group.query.filter(Group.name.ilike(f"%{search}%")).all()
+
+    print("SEARCH:", search)
+    print("RESULTS:", groups)
+
+    return render_template("dashboard.html", groups=groups, search=search)
 
 @app.route("/create-group", methods=["POST"])
 @jwt_required()
 def create_group():
-    current_user_id = get_jwt_identity()
-    group_name = request.form.get("group_name")
 
-    # Create the group
+    current_user_id = get_jwt_identity()
+
+    group_name = request.form.get("group_name")
+    passcode = request.form.get("passcode")
+
     new_group = Group(
         id=str(uuid.uuid4()),
         name=group_name,
+        passcode=passcode,
         created_by=current_user_id
     )
+
     db.session.add(new_group)
     db.session.commit()
 
-    # Add the creator as a member
     new_member = GroupMember(
         id=str(uuid.uuid4()),
         user_id=current_user_id,
         group_id=new_group.id
     )
+
     db.session.add(new_member)
     db.session.commit()
 
     return redirect("/dashboard")
+
 
 @app.route("/send-message", methods=["POST"])
 @jwt_required()
@@ -207,6 +227,8 @@ def handle_message(data):
     message = data["message"]
     user_id = data["user_id"]
 
+    user = User.query.get(user_id)
+
     new_message = Message(
         id=str(uuid.uuid4()),
         group_id=group_id,
@@ -220,12 +242,60 @@ def handle_message(data):
     emit(
         "receive_message",
         {
-            "user_id": user_id,
+            "user": user.display_name,
             "message": message,
             "group_id": group_id
         },
         room=group_id
     )
+
+@app.route("/set-name", methods=["POST"])
+@jwt_required()
+def set_name():
+
+    current_user_id = get_jwt_identity()
+
+    data = request.get_json()
+    name = data["name"]
+
+    user = User.query.get(current_user_id)
+    user.display_name = name
+
+    db.session.commit()
+
+    return jsonify({"status": "ok"})
+
+@app.route("/join-group", methods=["POST"])
+@jwt_required()
+def join_group_passcode():
+
+    current_user_id = get_jwt_identity()
+
+    group_id = request.form.get("group_id")
+    passcode = request.form.get("passcode")
+
+    group = Group.query.get(group_id)
+
+    if not group or group.passcode != passcode:
+        return "Wrong passcode"
+
+    existing = GroupMember.query.filter_by(
+        user_id=current_user_id,
+        group_id=group_id
+    ).first()
+
+    if not existing:
+
+        new_member = GroupMember(
+            id=str(uuid.uuid4()),
+            user_id=current_user_id,
+            group_id=group_id
+        )
+
+        db.session.add(new_member)
+        db.session.commit()
+
+    return redirect(f"/group/{group_id}")
 
 @app.route("/logout")
 def logout():
