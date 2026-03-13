@@ -8,7 +8,7 @@ font-family:'Poppins',sans-serif;
 /* DARK CYBER BACKGROUND */
 
 body{
-height:100vh;
+height:90vh;
 display:flex;
 flex-direction:column;
 background:#0b0f1a;
@@ -215,9 +215,9 @@ padding-top:12px;
 
 border-top:1px solid rgba(255,255,255,0.1);
 
-position: fixed !important;
+/* position: fixed !important; */
 
-bottom: 2rem !important;
+/* bottom: 2rem !important; */
 }
 
 /* MESSAGE INPUT */
