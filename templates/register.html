@@ -1,21 +1,39 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Register</title>
+<title>Register</title>
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<link rel="stylesheet" href="{{ url_for('static', filename='css/register.css') }}">
+
 </head>
+
 <body>
 
-<h2>Register</h2>
+<div class="register-box">
+
+<h2>Create Account</h2>
 
 <form method="POST" action="/register">
-    <input type="email" name="email" placeholder="Email" required>
-    <br><br>
-    <input type="password" name="password" placeholder="Password" required>
-    <br><br>
-    <button type="submit">Register</button>
+
+<div class="input-box">
+<input type="email" name="email" placeholder="Email" required>
+</div>
+
+<div class="input-box">
+<input type="password" name="password" placeholder="Password" required>
+</div>
+
+<button type="submit">Register</button>
+
 </form>
 
-<a href="/">Login</a>
+<div class="login-link">
+Already have an account? <a href="/">Login</a>
+</div>
+
+</div>
 
 </body>
 </html>
