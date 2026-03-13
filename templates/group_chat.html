@@ -1,27 +1,48 @@
 <!DOCTYPE html>
+
 <html>
+
 <head>
-    <title>Group Chat</title>
+<title>Group Chat</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<link rel="stylesheet" href="{{ url_for('static', filename='css/chat.css') }}">
+
 </head>
+
 <body>
 
-<h2>{{ group.name }}</h2>
-
-<div id="chat-box" style="border:1px solid black; height:300px; overflow:auto; padding:5px;">
-    {% for msg in messages %}
-        <div><strong>{{ msg.user_id }}</strong>: {{ msg.content }}</div>
-    {% endfor %}
+<div class="header">
+{{ group.name }}
 </div>
 
-<br>
+<div class="chat-container">
 
-<form id="message-form">
-    <input type="hidden" id="group_id" value="{{ group.id }}">
-    <input type="text" id="message_input" placeholder="Type message" required>
-    <button type="submit">Send</button>
+<div id="chat-box">
+
+{% for msg in messages %}
+
+<div class="message {% if msg.user_id == current_user_id %}you{% else %}other{% endif %}">
+<div class="username">{{ msg.user.display_name }}</div>
+{{ msg.content }}
+</div>
+
+{% endfor %}
+
+</div>
+
+<form id="message-form" class="input-area">
+
+<input type="hidden" id="group_id" value="{{ group.id }}">
+
+<input type="text" id="message_input" placeholder="Type a message..." required>
+
+<button type="submit">Send</button>
+
 </form>
 
-<!-- Socket.IO -->
+</div>
+
 <script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
 
 <script>
@@ -35,40 +56,63 @@ const form = document.getElementById("message-form");
 const chatBox = document.getElementById("chat-box");
 const messageInput = document.getElementById("message_input");
 
+/* join room */
 
-/* join the group room */
-socket.emit("join_group", {
-    group_id: group_id
-});
-
+socket.emit("join_group",{group_id:group_id});
 
 /* send message */
-form.addEventListener("submit", function(e){
-    e.preventDefault();
 
-    const message = messageInput.value;
+form.addEventListener("submit",function(e){
 
-    socket.emit("send_message", {
-        group_id: group_id,
-        message: message,
-        user_id: user_id
-    });
+e.preventDefault();
 
-    messageInput.value = "";
+const message = messageInput.value;
+
+socket.emit("send_message",{
+group_id:group_id,
+message:message,
+user_id:user_id
 });
 
+messageInput.value="";
 
-/* receive message instantly */
-socket.on("receive_message", function(data){
+});
 
-    const msgDiv = document.createElement("div");
+/* receive message */
 
-    msgDiv.innerHTML = "<strong>" + data.user_id + "</strong>: " + data.message;
+socket.on("receive_message",function(data){
 
-    chatBox.appendChild(msgDiv);
+const msgDiv=document.createElement("div");
 
-    chatBox.scrollTop = chatBox.scrollHeight;
+const username = document.createElement("div");
+username.className="username";
+username.innerText=data.user;
 
+msgDiv.className="message other";
+msgDiv.innerText=data.message;
+
+msgDiv.prepend(username);
+
+chatBox.appendChild(msgDiv);
+
+chatBox.scrollTop=chatBox.scrollHeight;
+
+});
+
+</script>
+
+<script>
+
+const username = localStorage.getItem("chat_name");
+
+fetch("/set-name",{
+method:"POST",
+headers:{
+"Content-Type":"application/json"
+},
+body:JSON.stringify({
+name:username
+})
 });
 
 </script>
