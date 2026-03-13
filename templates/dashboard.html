@@ -1,29 +1,92 @@
 <!DOCTYPE html>
 <html>
+
 <head>
-    <title>Dashboard</title>
+<title>Dashboard</title>
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<link rel="stylesheet" href="{{ url_for('static', filename='css/dashboard.css') }}">
+
 </head>
+
 <body>
+
+<div class="container">
 
 <h2>Dashboard</h2>
 
-<h3>Your Groups</h3>
+<h3>Search Groups</h3>
 
-<h3>Your Groups</h3>
+<form method="GET" action="/dashboard" class="search-box">
+<input type="text" name="search" placeholder="Search group name">
+<button type="submit">Search</button>
+</form>
+
+<div class="results-box">
+
+{% if search %}
 
 {% for group in groups %}
-    <p>
-        <a href="/group/{{ group.id }}">{{ group.name }}</a>
-    </p>
+
+<div class="bam">
+
+<h3>{{ group.name }}</h3>
+
+<form method="POST" action="/join-group" onsubmit="return askName()">
+<input type="hidden" name="group_id" value="{{ group.id }}">
+<input type="password" name="passcode" placeholder="Passcode" required>
+<button type="submit">Join</button>
+</form>
+
+</div>
+
 {% endfor %}
 
-<br>
+{% if groups|length == 0 %}
+<p>No groups found</p>
+{% endif %}
+
+{% endif %}
+
+</div>
+
+<div class="create-box">
 
 <h3>Create New Group</h3>
+
 <form method="POST" action="/create-group">
-    <input type="text" name="group_name" placeholder="Group Name" required>
-    <button type="submit">Create</button>
+
+<input type="text" name="group_name" placeholder="Group Name" required>
+
+<input type="password" name="passcode" placeholder="Group Passcode" required>
+
+<button type="submit">Create</button>
+
 </form>
+
+</div>
+
+</div>
+
+<script>
+
+function askName(){
+
+let name = prompt("Enter your name");
+
+if(!name){
+alert("Name required");
+return false;
+}
+
+localStorage.setItem("chat_name", name);
+
+return true;
+
+}
+
+</script>
 
 </body>
 </html>
