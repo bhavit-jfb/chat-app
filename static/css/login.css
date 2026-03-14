@@ -123,7 +123,9 @@ button:hover{
 /* Mobile */
 
 @media (max-width:480px){
-
+body {
+        min-height: 90vh;
+    }
 .login-box{
     padding:25px;
     border-radius:15px;
