@@ -1,162 +1,196 @@
-*{
-margin:0;
-padding:0;
-box-sizing:border-box;
-font-family:Arial, Helvetica, sans-serif;
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: Arial, Helvetica, sans-serif;
 }
 
 /* Animated background */
 
-body{
-min-height:100vh;
-display:flex;
-justify-content:center;
-align-items:center;
-background:linear-gradient(270deg,#6a11cb,#2575fc,#ff6a00,#ee0979);
-background-size:800% 800%;
-animation:gradientMove 12s ease infinite;
-padding:20px;
+body {
+    min-height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    /* background: linear-gradient(270deg, #6a11cb, #2575fc, #ff6a00, #ee0979);
+    background-size: 800% 800%;
+    animation: gradientMove 12s ease infinite; */
+    padding: 20px;
 }
 
-@keyframes gradientMove{
-0%{background-position:0% 50%;}
-50%{background-position:100% 50%;}
-100%{background-position:0% 50%;}
+.video-bg,
+.image-bg {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: -1;
+    overflow: hidden;
+}
+
+.video-bg video {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transform: scale(1.1);
+}
+
+@keyframes gradientMove {
+    0% {
+        background-position: 0% 50%;
+    }
+
+    50% {
+        background-position: 100% 50%;
+    }
+
+    100% {
+        background-position: 0% 50%;
+    }
 }
 
 /* Glass container */
 
-.register-box{
-width:100%;
-max-width:380px;
-padding:40px;
-border-radius:20px;
-background:rgba(255,255,255,0.1);
-backdrop-filter:blur(15px);
-border:1px solid rgba(255,255,255,0.3);
-box-shadow:0 20px 50px rgba(0,0,0,0.3);
-text-align:center;
-color:white;
+.register-box {
+    width: 100%;
+    max-width: 380px;
+    padding: 40px;
+    border-radius: 20px;
+    background: rgba(255, 255, 255, 0.1);
+    backdrop-filter: blur(15px);
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    box-shadow: 0 20px 50px rgba(0, 0, 0, 0.3);
+    text-align: center;
+    color: white;
+    background: rgba(255, 255, 255, 0.08);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    box-shadow:0 8px 20px rgba(0, 0, 0, 0.25);
+    transition: all 0.25s ease;
 }
 
 /* Title */
 
-.register-box h2{
-margin-bottom:30px;
-font-size:28px;
-letter-spacing:1px;
+.register-box h2 {
+    margin-bottom: 30px;
+    font-size: 28px;
+    letter-spacing: 1px;
+    color: #000;
 }
 
 /* Inputs */
 
-.input-box{
-margin-bottom:20px;
+.input-box {
+    margin-bottom: 20px;
 }
 
-.input-box input{
-width:100%;
-padding:12px;
-border:none;
-outline:none;
-border-radius:10px;
-background:rgba(255,255,255,0.2);
-color:white;
-font-size:15px;
+.input-box input {
+    width: 100%;
+    padding: 12px;
+    border: none;
+    outline: none;
+    border-radius: 10px;
+    background: rgba(255, 255, 255, 0.2);
+    color: black;
+    font-size: 15px;
 }
 
-.input-box input::placeholder{
-color:#eee;
+.input-box input::placeholder {
+    color: #888888;
 }
 
 /* Register button */
 
-button{
-width:100%;
-padding:12px;
-border:none;
-border-radius:10px;
-background:linear-gradient(45deg,#ff512f,#dd2476);
-color:white;
-font-size:16px;
-font-weight:bold;
-cursor:pointer;
-transition:0.3s;
+button {
+    width: 100%;
+    padding: 12px;
+    border: none;
+    border-radius: 10px;
+    background: linear-gradient(45deg, #ff512f, #dd2476);
+    color: white;
+    font-size: 16px;
+    font-weight: bold;
+    cursor: pointer;
+    transition: 0.3s;
 }
 
-button:hover{
-transform:scale(1.05);
-box-shadow:0 10px 25px rgba(0,0,0,0.3);
+button:hover {
+    transform: scale(1.05);
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.3);
 }
 
 /* Login link */
 
-.login-link{
-margin-top:20px;
-font-size:14px;
+.login-link {
+    color: #000;
+    margin-top: 20px;
+    font-size: 14px;
 }
 
-.login-link a{
-color:white;
-font-weight:bold;
-text-decoration:none;
+.login-link a {
+    font-weight: bold;
+    text-decoration: none;
 }
 
-.login-link a:hover{
-text-decoration:underline;
+.login-link a:hover {
+    text-decoration: underline;
 }
 
 /* Tablet */
 
-@media (max-width:768px){
+@media (max-width:768px) {
 
-.register-box{
-padding:30px;
-}
+    .register-box {
+        padding: 30px;
+    }
 
-.register-box h2{
-font-size:24px;
-}
+    .register-box h2 {
+        font-size: 24px;
+    }
 
 }
 
 /* Mobile */
 
-@media (max-width:480px){
-body {
+@media (max-width:480px) {
+    body {
         min-height: 90vh;
     }
-.register-box{
-padding:25px;
-border-radius:15px;
-}
 
-.register-box h2{
-font-size:22px;
-}
+    .register-box {
+        padding: 25px;
+        border-radius: 15px;
+    }
 
-.input-box input{
-padding:10px;
-font-size:14px;
-}
+    .register-box h2 {
+        font-size: 22px;
+    }
 
-button{
-padding:10px;
-font-size:15px;
-}
+    .input-box input {
+        padding: 10px;
+        font-size: 14px;
+    }
+
+    button {
+        padding: 10px;
+        font-size: 15px;
+    }
 
 }
 
 /* Large screens */
 
-@media (min-width:1200px){
+@media (min-width:1200px) {
 
-.register-box{
-max-width:420px;
-padding:50px;
-}
+    .register-box {
+        max-width: 420px;
+        padding: 50px;
+    }
 
-.register-box h2{
-font-size:32px;
-}
+    .register-box h2 {
+        font-size: 32px;
+    }
 
 }
