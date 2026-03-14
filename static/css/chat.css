@@ -339,7 +339,7 @@ body::after {
 
 @media (max-width:600px) {
     body {
-        min-height: 90vh;
+        height: 90vh;
     }
 
     .message {
