@@ -122,7 +122,9 @@ font-size:24px;
 /* Mobile */
 
 @media (max-width:480px){
-
+body {
+        min-height: 90vh;
+    }
 .register-box{
 padding:25px;
 border-radius:15px;
