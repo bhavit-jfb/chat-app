@@ -8,7 +8,7 @@ font-family:'Poppins',sans-serif;
 /* DARK CYBER BACKGROUND */
 
 body{
-height:90vh;
+height:100vh;
 display:flex;
 flex-direction:column;
 background:#0b0f1a;
@@ -321,7 +321,9 @@ background-position:0% 50%;
 /* MOBILE */
 
 @media (max-width:600px){
-
+body {
+        min-height: 90vh;
+    }
 .message{
 max-width:85%;
 font-size:13px;
