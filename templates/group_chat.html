@@ -3,128 +3,128 @@
 <html>
 
 <head>
-<title>Group Chat</title>
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Group Chat</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-<link rel="stylesheet" href="{{ url_for('static', filename='css/chat.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/chat.css') }}">
 
 </head>
 
 <body>
+    <div class="video-bg">
+        <video autoplay loop playsinline muted>
+            <source src="{{ url_for('static', filename='video3.mp4') }}" type="video/mp4">
+        </video>
+    </div>
+    <div class="header">
+        <button class="back-btn" onclick="window.location.href='/dashboard'">←</button>
+        <span class="group-title">{{ group.name }}</span>
+        <div class="demo">
+            <p>Demo</p>
+        </div>
+    </div>
 
-<div class="header">
-    <button class="back-btn" onclick="window.location.href='/dashboard'">←</button>
-    <span class="group-title">{{ group.name }}</span>
-    <div class="demo"><p>Demo</p></div>
-</div>
+    <div class="chat-container">
 
-<div class="chat-container">
+        <div id="chat-box">
 
-<div id="chat-box">
+            {% for msg in messages %}
 
-{% for msg in messages %}
+            <div class="message {% if msg.user_id == current_user_id %}you{% else %}other{% endif %}">
+                <div class="username">{{ msg.user.display_name }}</div>
+                {{ msg.content }}
+            </div>
 
-<div class="message {% if msg.user_id == current_user_id %}you{% else %}other{% endif %}">
-<div class="username">{{ msg.user.display_name }}</div>
-{{ msg.content }}
-</div>
+            {% endfor %}
 
-{% endfor %}
+        </div>
 
-</div>
+        <form id="message-form" class="input-area">
 
-<form id="message-form" class="input-area">
+            <input type="hidden" id="group_id" value="{{ group.id }}">
 
-<input type="hidden" id="group_id" value="{{ group.id }}">
+            <input type="text" id="message_input" placeholder="Type a message..." required>
 
-<input type="text" id="message_input" placeholder="Type a message..." required>
+            <button type="submit">Send</button>
 
-<button type="submit">Send</button>
+        </form>
 
-</form>
+    </div>
 
-</div>
+    <script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
 
-<script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
+    <script>
 
-<script>
+        const socket = io();
 
-const socket = io();
+        const group_id = "{{ group.id }}";
+        const user_id = "{{ current_user_id if current_user_id else '' }}";
 
-const group_id = "{{ group.id }}";
-const user_id = "{{ current_user_id if current_user_id else '' }}";
+        const form = document.getElementById("message-form");
+        const chatBox = document.getElementById("chat-box");
+        const messageInput = document.getElementById("message_input");
 
-const form = document.getElementById("message-form");
-const chatBox = document.getElementById("chat-box");
-const messageInput = document.getElementById("message_input");
+        /* join room */
 
-/* join room */
+        socket.emit("join_group", { group_id: group_id });
 
-socket.emit("join_group",{group_id:group_id});
+        /* send message */
 
-/* send message */
+        form.addEventListener("submit", function (e) {
 
-form.addEventListener("submit",function(e){
+            e.preventDefault();
 
-e.preventDefault();
+            const message = messageInput.value;
 
-const message = messageInput.value;
+            socket.emit("send_message", {
+                group_id: group_id,
+                message: message,
+                user_id: user_id
+            });
 
-socket.emit("send_message",{
-group_id:group_id,
-message:message,
-user_id:user_id
-});
+            messageInput.value = "";
 
-messageInput.value="";
+        });
 
-});
+        /* receive message */
 
-/* receive message */
+        socket.on("receive_message", function (data) {
 
-socket.on("receive_message", function (data) {
+            const msgDiv = document.createElement("div");
 
-    const msgDiv = document.createElement("div");
+            const username = document.createElement("div");
+            username.className = "username";
+            username.innerText = data.user;
 
-    /* decide message side */
-    if (data.user_id == user_id) {
-        msgDiv.className = "message you";
-    } else {
-        msgDiv.className = "message other";
-    }
+            msgDiv.className = "message other";
+            msgDiv.innerText = data.message;
 
-    const username = document.createElement("div");
-    username.className = "username";
-    username.innerText = data.user;
+            msgDiv.prepend(username);
 
-    const text = document.createElement("div");
-    text.innerText = data.message;
+            chatBox.appendChild(msgDiv);
 
-    msgDiv.appendChild(username);
-    msgDiv.appendChild(text);
+            chatBox.scrollTop = chatBox.scrollHeight;
 
-    chatBox.appendChild(msgDiv);
+        });
 
-    chatBox.scrollTop = chatBox.scrollHeight;
+    </script>
 
-});
-</script>
+    <script>
 
-<script>
+        const username = localStorage.getItem("chat_name");
 
-const username = localStorage.getItem("chat_name");
+        fetch("/set-name", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify({
+                name: username
+            })
+        });
 
-fetch("/set-name",{
-method:"POST",
-headers:{
-"Content-Type":"application/json"
-},
-body:JSON.stringify({
-name:username
-})
-});
-
-</script>
+    </script>
 
 </body>
+
 </html>
