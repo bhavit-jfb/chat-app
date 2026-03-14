@@ -2,94 +2,97 @@
 <html>
 
 <head>
-<title>Dashboard</title>
+    <title>Dashboard</title>
 
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-<link rel="stylesheet" href="{{ url_for('static', filename='css/dashboard.css') }}">
-
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/dashboard.css') }}">
 </head>
 
 <body>
-
-<div class="container">
-
-<div class="header-bar">
+    <div class="video-bg">
+        <video autoplay loop playsinline muted>
+            <source src="{{ url_for('static', filename='video.mp4') }}" type="video/mp4">
+        </video>
+    </div>
+    <div class="container">
+        <div class="header-bar">
             <h2>Dashboard</h2>
             <a href="/logout" class="logout-btn">Logout</a>
         </div>
 
-<h3>Search Groups</h3>
+        <h3>Search Groups</h3>
 
-<form method="GET" action="/dashboard" class="search-box">
-<input type="text" name="search" placeholder="Search group name">
-<button type="submit">Search</button>
-</form>
+        <form method="GET" action="/dashboard" class="search-box">
+            <input type="text" name="search" placeholder="Search group name">
+            <button type="submit">Search</button>
+        </form>
 
-<div class="results-box">
+        <div class="results-box">
 
-{% if search %}
+            {% if search %}
 
-{% for group in groups %}
+            {% for group in groups %}
 
-<div class="bam">
+            <div class="bam">
 
-<h3>{{ group.name }}</h3>
+                <h3>{{ group.name }}</h3>
 
-<form method="POST" action="/join-group" onsubmit="return askName()">
-<input type="hidden" name="group_id" value="{{ group.id }}">
-<input type="password" name="passcode" placeholder="Passcode" required>
-<button type="submit">Join</button>
-</form>
+                <form method="POST" action="/join-group" onsubmit="return askName()">
+                    <input type="hidden" name="group_id" value="{{ group.id }}">
+                    <input type="password" name="passcode" placeholder="Passcode" required>
+                    <button type="submit">Join</button>
+                </form>
 
-</div>
+            </div>
 
-{% endfor %}
+            {% endfor %}
 
-{% if groups|length == 0 %}
-<p>No groups found</p>
-{% endif %}
+            {% if groups|length == 0 %}
+            <p>No groups found</p>
+            {% endif %}
 
-{% endif %}
+            {% endif %}
 
-</div>
+        </div>
 
-<div class="create-box">
+        <div class="create-box">
 
-<h3>Create New Group</h3>
+            <h3>Create New Group</h3>
 
-<form method="POST" action="/create-group">
+            <form method="POST" action="/create-group">
 
-<input type="text" name="group_name" placeholder="Group Name" required>
+                <input type="text" name="group_name" placeholder="Group Name" required>
 
-<input type="password" name="passcode" placeholder="Group Passcode" required>
+                <input type="password" name="passcode" placeholder="Group Passcode" required>
 
-<button type="submit">Create</button>
+                <button type="submit">Create</button>
 
-</form>
+            </form>
 
-</div>
+        </div>
 
-</div>
+    </div>
 
-<script>
+    <script>
 
-function askName(){
+        function askName() {
 
-let name = prompt("Enter your name");
+            let name = prompt("Enter your name");
 
-if(!name){
-alert("Name required");
-return false;
-}
+            if (!name) {
+                alert("Name required");
+                return false;
+            }
 
-localStorage.setItem("chat_name", name);
+            localStorage.setItem("chat_name", name);
 
-return true;
+            return true;
 
-}
+        }
 
-</script>
+    </script>
 
 </body>
+
 </html>
