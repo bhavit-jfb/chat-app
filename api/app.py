@@ -12,6 +12,7 @@ from flask_jwt_extended import (
     unset_jwt_cookies
 )
 from flask_socketio import SocketIO, join_room, emit
+import re
 import os
 
 app = Flask(__name__, template_folder="../templates", static_folder="../static")
@@ -42,6 +43,7 @@ class Group(db.Model):
     __tablename__ = "groups"
     id = db.Column(db.String, primary_key=True, default=lambda: str(uuid.uuid4()))
     name = db.Column(db.String(120), nullable=False)
+    slug = db.Column(db.String(150), unique=True)
     passcode = db.Column(db.String(50), nullable=False)
     created_by = db.Column(db.String, db.ForeignKey("users.id"))
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
@@ -67,6 +69,11 @@ class Message(db.Model):
 # ---------------- INIT DB ----------------
 with app.app_context():
     db.create_all()
+
+def generate_slug(name):
+    slug = name.lower()
+    slug = re.sub(r'[^a-z0-9]+', '-', slug)
+    return slug.strip('-')
 
 # ---------------- ROUTES ----------------
 @app.route("/")
@@ -128,9 +135,22 @@ def create_group():
     group_name = request.form.get("group_name")
     passcode = request.form.get("passcode")
 
+    # ✅ STEP 1: generate slug
+    slug = generate_slug(group_name)
+
+    # ✅ STEP 2: ensure unique slug
+    existing = Group.query.filter_by(slug=slug).first()
+    counter = 1
+    while existing:
+        slug = f"{slug}-{counter}"
+        existing = Group.query.filter_by(slug=slug).first()
+        counter += 1
+
+    # ✅ STEP 3: create group WITH slug
     new_group = Group(
         id=str(uuid.uuid4()),
         name=group_name,
+        slug=slug,   # ⭐ ADD HERE
         passcode=passcode,
         created_by=current_user_id
     )
@@ -138,6 +158,7 @@ def create_group():
     db.session.add(new_group)
     db.session.commit()
 
+    # add creator as member
     new_member = GroupMember(
         id=str(uuid.uuid4()),
         user_id=current_user_id,
@@ -148,7 +169,6 @@ def create_group():
     db.session.commit()
 
     return redirect("/dashboard")
-
 
 @app.route("/send-message", methods=["POST"])
 @jwt_required()
@@ -182,19 +202,31 @@ def send_message():
     db.session.commit()
     return jsonify({"status": "Message received", "message": content})
 
-@app.route("/group/<group_id>")
+@app.route("/group/<slug>")
 @jwt_required()
-def group_chat(group_id):
+def group_chat(slug):
+
     current_user_id = get_jwt_identity()
 
-    # Optional: check if user is member of this group
-    membership = GroupMember.query.filter_by(user_id=current_user_id, group_id=group_id).first()
+    group = Group.query.filter_by(slug=slug).first_or_404()
+
+    # check membership
+    membership = GroupMember.query.filter_by(
+        user_id=current_user_id,
+        group_id=group.id
+    ).first()
+
     if not membership:
         return "Access denied to this group", 403
 
-    group = Group.query.get(group_id)
-    messages = Message.query.filter_by(group_id=group_id).order_by(Message.timestamp).all()
-    return render_template("group_chat.html", group=group, messages=messages, current_user_id=current_user_id)
+    messages = Message.query.filter_by(group_id=group.id).order_by(Message.timestamp).all()
+
+    return render_template(
+        "group_chat.html",
+        group=group,
+        messages=messages,
+        current_user_id=current_user_id
+    )
 
 @app.route("/create-message", methods=["POST"])
 @jwt_required()
@@ -272,17 +304,17 @@ def join_group_passcode():
 
     current_user_id = get_jwt_identity()
 
-    group_id = request.form.get("group_id")
+    slug = request.form.get("slug")
     passcode = request.form.get("passcode")
 
-    group = Group.query.get(group_id)
+    group = Group.query.filter_by(slug=slug).first()
 
     if not group or group.passcode != passcode:
         return "Wrong passcode"
 
     existing = GroupMember.query.filter_by(
         user_id=current_user_id,
-        group_id=group_id
+        group_id=group.id
     ).first()
 
     if not existing:
@@ -290,13 +322,13 @@ def join_group_passcode():
         new_member = GroupMember(
             id=str(uuid.uuid4()),
             user_id=current_user_id,
-            group_id=group_id
+            group_id=group.id
         )
 
         db.session.add(new_member)
         db.session.commit()
 
-    return redirect(f"/group/{group_id}")
+    return redirect(f"/group/{group.slug}")
 
 @app.route("/logout")
 def logout():
