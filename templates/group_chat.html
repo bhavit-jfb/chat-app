@@ -41,7 +41,7 @@
 
         <form id="message-form" class="input-area">
 
-            <input type="hidden" id="group_id" value="{{ group.id }}">
+            <input type="hidden" id="group_id" value="{{ group.slug }}">
 
             <input type="text" id="message_input" placeholder="Type a message..." required>
 
@@ -57,7 +57,7 @@
 
         const socket = io();
 
-        const group_id = "{{ group.id }}";
+        const group_id = "{{ group.slug }}";
         const user_id = "{{ current_user_id if current_user_id else '' }}";
 
         const form = document.getElementById("message-form");
