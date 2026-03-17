@@ -90,22 +90,30 @@
 
         socket.on("receive_message", function (data) {
 
-            const msgDiv = document.createElement("div");
+    const msgDiv = document.createElement("div");
 
-            const username = document.createElement("div");
-            username.className = "username";
-            username.innerText = data.user;
+    /* decide message side */
+    if (data.user_id == user_id) {
+        msgDiv.className = "message you";
+    } else {
+        msgDiv.className = "message other";
+    }
 
-            msgDiv.className = "message other";
-            msgDiv.innerText = data.message;
+    const username = document.createElement("div");
+    username.className = "username";
+    username.innerText = data.user;
 
-            msgDiv.prepend(username);
+    const text = document.createElement("div");
+    text.innerText = data.message;
 
-            chatBox.appendChild(msgDiv);
+    msgDiv.appendChild(username);
+    msgDiv.appendChild(text);
 
-            chatBox.scrollTop = chatBox.scrollHeight;
+    chatBox.appendChild(msgDiv);
 
-        });
+    chatBox.scrollTop = chatBox.scrollHeight;
+
+});
 
     </script>
 
