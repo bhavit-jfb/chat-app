@@ -34,6 +34,42 @@ body {
     transform: scale(1.1);
 }
 
+.logout-btn {
+
+    /* position:absolute; */
+    top: 20px;
+    right: 25px;
+    padding: 10px 20px;
+    color: white;
+    text-decoration: none;
+    font-size: 14px;
+    font-weight: 500;
+    border-radius: 14px;
+    /* GLASS EFFECT */
+    background: rgba(255, 255, 255, 0.08);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    box-shadow:0 8px 20px rgba(0, 0, 0, 0.25);
+    transition: all 0.25s ease;
+    backdrop-filter: invert(1);
+}
+
+/* Hover effect */
+
+.logout-btn:hover {
+
+    background: rgb(14 45 62);
+
+    transform: translateY(-2px);
+
+    box-shadow:
+        0 10px 30px rgba(0, 0, 0, 0.35),
+        0 0 10px rgba(255, 255, 255, 0.2);
+
+}
+
+
 /* LIQUID BLOBS */
 
 /* body::before,
