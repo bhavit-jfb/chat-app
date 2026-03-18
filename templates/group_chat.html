@@ -57,7 +57,7 @@
 
         const socket = io();
 
-        const group_id = "{{ group.slug }}";
+        const group_id = "{{ group.id }}";
         const user_id = "{{ current_user_id if current_user_id else '' }}";
 
         const form = document.getElementById("message-form");
